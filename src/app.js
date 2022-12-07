@@ -4,26 +4,31 @@ import path from "path";
 import cors from "cors";
 import express from "express";
 import routes from "./routes";
+import fs from "fs";
+import https from "https";
 import "./database";
 
 class App {
   constructor() {
-    this.server = express();
+    const key = fs.readFileSync("./key.pem");
+    const cert = fs.readFileSync("./cert.pem");
+    this.app = express();
+    this.server = https.createServer({ key: key, cert: cert }, this.app);
     this.middlewares();
     this.routes();
   }
 
   middlewares() {
-    this.server.use(cors());
-    this.server.use(express.json());
-    this.server.use(
+    this.app.use(cors());
+    this.app.use(express.json());
+    this.app.use(
       "/files",
       express.static(path.resolve(__dirname, "..", "tmp", "uploads"))
-    )
+    );
   }
 
   routes() {
-    this.server.use(routes);
+    this.app.use(routes);
   }
 }
 export default new App().server;
